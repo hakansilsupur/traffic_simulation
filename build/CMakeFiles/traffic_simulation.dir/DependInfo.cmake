@@ -33,6 +33,7 @@ set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "/home/pc/Git/opencv/modules/stitching/include"
   "/home/pc/Git/opencv/modules/ts/include"
   "/home/pc/Git/opencv/modules/video/include"
+  "/home/pc/Git/opencv/modules/gapi/include"
   )
 
 # Targets to which this target links.

@@ -24,10 +24,10 @@ class MessageQueue
 public:
     T receive();
     void send(T &&msg);
-
+    
 private:
     std::condition_variable _cond;
-    std::mutex _mtx;
+    std::mutex _mtx;  
     std::deque<T> _queue;
 };
 

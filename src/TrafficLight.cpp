@@ -15,7 +15,6 @@ T MessageQueue<T>::receive()
 
     T msg = std::move(_queue.back());
     _queue.pop_back();
-    _cond.notify_one();
 
     return msg;
 }
@@ -26,7 +25,6 @@ void MessageQueue<T>::send(T &&msg)
     // FP.4a : The method send should use the mechanisms std::lock_guard<std::mutex> 
     // as well as _condition.notify_one() to add a new message to the queue and afterwards send a notification.
     std::lock_guard<std::mutex> myLock(_mtx);
-    // _cond.wait(myLock, [this] { return _queue.empty(); });
     _queue.push_back(msg);
     _cond.notify_one();
 }
@@ -48,11 +46,12 @@ void TrafficLight::waitForGreen()
     // FP.5b : add the implementation of the method waitForGreen, in which an infinite while-loop 
     // runs and repeatedly calls the receive function on the message queue. 
     // Once it receives TrafficLightPhase::green, the method returns.
+
     while(true)
     {
-        if(_messageQueue.receive() == TrafficLightPhase::green)
+        if(_messageQueue.receive() == TrafficLightPhase::green) 
             break;
-    }
+    }     
 }
 
 TrafficLightPhase TrafficLight::getCurrentPhase()
@@ -64,10 +63,8 @@ void TrafficLight::simulate()
 {
     // FP.2b : Finally, the private method „cycleThroughPhases“ should be started in a thread when the public method „simulate“ is called. 
     // To do this, use the thread queue in the base class. 
-    for(int i = 0; i < threads.size(); ++i)
-    {
-        threads.emplace_back(std::thread(&TrafficLight::cycleThroughPhases, this));
-    }
+    threads.emplace_back(std::thread(&TrafficLight::cycleThroughPhases, this));
+
 }
 
 // virtual function which is executed in a thread
@@ -79,23 +76,26 @@ void TrafficLight::cycleThroughPhases()
     // Also, the while-loop should use std::this_thread::sleep_for to wait 1ms between two cycles. 
 
     auto start = std::chrono::high_resolution_clock::now();
-    
+    int random_number = std::rand() % 3 + 4;
+
     while(true)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         auto end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
-        if(duration.count() > std::rand() % 2 + 4)
-            continue;
+        if(duration.count() >= random_number*1e6)
+        {
+            random_number = std::rand() % 3 + 4;
 
-        if(_currentPhase == TrafficLightPhase::red)
-            _currentPhase = TrafficLightPhase::green;
-        else
-            _currentPhase = TrafficLightPhase::red;
+            if(_currentPhase == TrafficLightPhase::red)
+                _currentPhase = TrafficLightPhase::green;
+            else
+                _currentPhase = TrafficLightPhase::red;
+        
+            _messageQueue.send(std::move(_currentPhase));  
 
-        _messageQueue.send(std::move(_currentPhase));
-
-        start = std::chrono::high_resolution_clock::now();
+            start = end; // reset stop watch
+        }     
     }
 }
